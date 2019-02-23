@@ -1,7 +1,15 @@
 package main
 
-import "wechat_proxy/server"
+import (
+	"github.com/wowoniu/go_wechat_proxy/server"
+)
 
 func main() {
-	server.Listen()
+	server.Start()
+}
+
+func init() {
+	server.NewClientMgr()
+	server.NewMsgMgr()
+	server.NewWechatProxy()
 }

@@ -1,9 +1,11 @@
 package server
 
 import (
-	"WECHAT_PROXY/common"
 	"encoding/json"
+	"fmt"
 	"time"
+
+	"github.com/wowoniu/go_wechat_proxy/common"
 
 	"github.com/gorilla/websocket"
 )
@@ -28,9 +30,12 @@ func NewClientMgr() *ClientMgr {
 	}
 	GClientMgr = &ClientMgr{
 		ClientEventChan: make(chan *common.ClientEvent, 1000),
+		ActivityTable:   make(map[string]*common.WsClient),
 	}
-	//心跳监测
-	GClientMgr.Heartbeat()
+	//监听客户端事件
+	GClientMgr.WatchEvent()
+	//心跳包发送
+	//GClientMgr.Heartbeat()
 	return GClientMgr
 }
 
@@ -49,11 +54,18 @@ func (c *ClientMgr) WatchEvent() {
 //HandleEvent 处理客户端事件
 func (c *ClientMgr) HandleEvent(clientEvent *common.ClientEvent) {
 	switch clientEvent.Type {
+	//上线
 	case common.ClientEventOnlineType:
 		if client, isExisted := c.ActivityTable[clientEvent.ClientKey]; isExisted {
 			client.Conn.Close()
 		}
 		c.ActivityTable[clientEvent.ClientKey] = clientEvent.Client
+	case common.ClientEventOfflineType:
+		if client, isExisted := c.ActivityTable[clientEvent.ClientKey]; isExisted {
+			client.Conn.Close()
+			fmt.Println("客户端下线:", client.ClientKey, "-", client.UserKey)
+			delete(c.ActivityTable, clientEvent.ClientKey)
+		}
 	}
 }
 
@@ -71,10 +83,17 @@ func (c *ClientMgr) Heartbeat() {
 		)
 		for {
 			select {
-			case <-time.Tick(3 * time.Second):
+			case <-time.Tick(5 * time.Second):
+				fmt.Println("客户端数量:", len(c.ActivityTable))
 				for _, client := range c.ActivityTable {
 					if msg, err = c.BuildHeartbeatPackage(); err == nil {
-						client.Conn.WriteMessage(websocket.TextMessage, msg)
+						//fmt.Println("发送心跳:",string(msg))
+						if err = client.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+							//心跳发送失败 下线
+							c.PushClientEvent(c.BuildClientEvent(client, common.ClientEventOfflineType))
+						}
+					} else {
+						fmt.Println("心跳包构造失败:", err)
 					}
 				}
 			}
@@ -87,6 +106,7 @@ func (c *ClientMgr) Heartbeat() {
 func (c *ClientMgr) BuildHeartbeatPackage() (msg []byte, err error) {
 	data := common.WsMessage{
 		Method: common.WsMethodHeartbeat,
+		Body:   &common.WsMessageData{},
 	}
 	//JSON序列化
 	if msg, err = json.Marshal(data); err != nil {
@@ -96,10 +116,11 @@ func (c *ClientMgr) BuildHeartbeatPackage() (msg []byte, err error) {
 }
 
 //GetClient 获取连接客户端
-func (c *ClientMgr) GetClient(clientID string) (client *common.WsClient, err error) {
-	var isExisted bool
-	if client, isExisted = c.ActivityTable[clientID]; isExisted {
-		return client, nil
+func (c *ClientMgr) GetClient(userKey string) (client *common.WsClient, err error) {
+	for _, client := range c.ActivityTable {
+		if client.UserKey == userKey {
+			return client, nil
+		}
 	}
 	return nil, common.ErrorClientOffline
 }
@@ -121,4 +142,25 @@ func (c *ClientMgr) BuildClientEvent(client *common.WsClient, eventType string) 
 		ClientKey: client.ClientKey,
 		Client:    client,
 	}
+}
+
+func (c *ClientMgr) Send(userKey string, wsMsg []byte) (err error) {
+	var (
+		wsClient *common.WsClient
+	)
+	//获取客户端连接
+	if wsClient, err = GClientMgr.GetClient(userKey); err != nil {
+		//客户端已下线
+		//fmt.Println("获取客户端失败")
+		return
+	}
+	err = wsClient.Conn.WriteMessage(websocket.TextMessage, wsMsg)
+	return
+}
+
+func (c *ClientMgr) SetUserKey(clientID string, userKey string) {
+	if client, isExisted := c.ActivityTable[clientID]; isExisted {
+		client.UserKey = userKey
+	}
+	return
 }

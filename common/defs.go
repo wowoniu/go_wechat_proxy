@@ -8,7 +8,8 @@ import (
 
 //WsClient 客户端
 type WsClient struct {
-	ClientKey      string          //客户端标识
+	ClientKey      string          //连接标识
+	UserKey        string          //用户标识
 	Conn           *websocket.Conn //ws连接
 	ConnectTime    time.Time       //连接时间
 	LastActiveTime time.Time       //最后一次活跃时间
@@ -23,6 +24,33 @@ type ClientEvent struct {
 
 //WsMessage 通信的消息体
 type WsMessage struct {
-	Method string      `json:"method"` //指令
-	Data   interface{} `json:"data"`
+	Method string         `json:"method"` //指令
+	Body   *WsMessageData `json:"body"`   //消息体
+}
+
+type WsMessageData struct {
+	ErrorCode string      `json:"err_code"`
+	ErrorMsg  string      `json:"error_msg"`
+	Data      interface{} `json:"data"`
+}
+
+//微信转发相关
+
+type ProxyRecord struct {
+	RequestTime  time.Time
+	ResponseChan chan *LocalResponse
+}
+
+type WechatRequest struct {
+	ID         string `json:"id"`
+	AppID      string `json:"app_id"`
+	GetParams  string `json:"get_params"`
+	PostParams string `json:"post_params"`
+	Data       string `json:"xml_data"`
+}
+
+type LocalResponse struct {
+	ID    string `json:"id"`
+	AppID string `json:"app_id"`
+	Data  string `json:"data"`
 }

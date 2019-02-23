@@ -4,8 +4,17 @@ const (
 	//WsMethodHeartbeat 消息指令:心跳包
 	WsMethodHeartbeat = "heartbeat"
 
-	//WsMethodMessage 消息指令:消息
+	//WsMethodMessage 消息指令:普通消息
 	WsMethodMessage = "message"
+
+	//WsMethodResponse 消息指令:本地响应
+	WsMethodLocalResponse = "localResponse"
+
+	//WsMethodResponse 消息指令:微信请求
+	WsMethodWechatRequest = "wechatRequest"
+
+	//WsMethodMessage 消息指令:初始化
+	WsMethodInit = "init"
 
 	//ClientEventOnlineType 客户端事件类型:上线
 	ClientEventOnlineType = "1"

@@ -1,10 +1,9 @@
 package server
 
 import (
-	"WECHAT_PROXY/common"
 	"encoding/json"
-
-	"github.com/gorilla/websocket"
+	"fmt"
+	"github.com/wowoniu/go_wechat_proxy/common"
 )
 
 /**
@@ -37,22 +36,29 @@ func (c *MsgMgr) HandleMsg(clientID string, message []byte) {
 	go func() {
 		var (
 			wsMessage *common.WsMessage
-			wsClient  *common.WsClient
 			err       error
 		)
-		//处理响应
+		//解析请求数据
 		if wsMessage, err = c.ParseMsg(message); err != nil {
+			fmt.Println("无效的消息:", err)
+			response, _ := c.BuildMsg(common.WsMethodMessage, common.ErrorInvalidMessage)
+			GClientMgr.Send(clientID, response)
 			return
 		}
-		//获取客户端连接
-		if wsClient, err = GClientMgr.GetClient(clientID); err != nil {
-			//
+		//业务处理
+		switch wsMessage.Method {
+		case common.WsMethodLocalResponse:
+			//本地机器响应
+			localResponseStr := wsMessage.Body.Data.(string)
+			localResponse := &common.LocalResponse{}
+			json.Unmarshal([]byte(localResponseStr), localResponse)
+			GWechatProxy.ToWechat(localResponse)
+		case common.WsMethodInit:
+			//初始化连接
+			AppID := wsMessage.Body.Data.(string)
+			fmt.Println("用户上线:", clientID, "-", AppID)
+			GClientMgr.SetUserKey(clientID, AppID)
 		}
-
-		//todo 业务处理
-		wsMessage = wsMessage
-		wsClient.Conn.WriteMessage(websocket.TextMessage, []byte("你好"))
-
 	}()
 }
 
@@ -60,5 +66,18 @@ func (c *MsgMgr) HandleMsg(clientID string, message []byte) {
 func (c *MsgMgr) ParseMsg(message []byte) (wsMsg *common.WsMessage, err error) {
 	wsMsg = &common.WsMessage{}
 	err = json.Unmarshal(message, wsMsg)
+	return
+}
+
+func (c *MsgMgr) BuildMsg(method string, data interface{}) (msg []byte, err error) {
+	wsMsg := &common.WsMessage{
+		Method: method,
+		Body: &common.WsMessageData{
+			ErrorCode: "",
+			ErrorMsg:  "",
+			Data:      data,
+		},
+	}
+	msg, err = json.Marshal(wsMsg)
 	return
 }

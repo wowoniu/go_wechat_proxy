@@ -24,11 +24,24 @@ ws.onmessage=function(msgEvent){
 }
 
 ws.onopen=function(event){
-	ws.send("hello")
+	ws.send(buildMessage("123456789","init"))
 }
 
 var sendMsg=function(msg){
 	return ws.send(msg)
+}
+
+function buildMessage(data,method,errCode,errMsg){
+    method=method?method:"localResponse";
+	var data={
+	    "method":method,
+		"body":{
+	        "err_code":errCode,
+			"err_msg":errMsg,
+			"data":data
+		}
+	}
+	return JSON.stringify(data)
 }
 
 </script>

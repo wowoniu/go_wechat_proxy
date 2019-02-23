@@ -1,15 +1,19 @@
 package server
 
 import (
-	"WECHAT_PROXY/common"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/wowoniu/go_wechat_proxy/common"
+
 	"github.com/gorilla/websocket"
 )
 
-func Listen() {
+func Start() {
+	//微信请求监听
+	http.HandleFunc("/wechat/proxy", handleWechat)
+	//websocket
 	http.HandleFunc("/ws", handleWs)
 	http.Handle("/", http.FileServer(http.Dir("./webroot")))
 	http.ListenAndServe("0.0.0.0:8082", nil)
@@ -17,13 +21,11 @@ func Listen() {
 
 func handleWs(w http.ResponseWriter, r *http.Request) {
 	var (
-		err      error
-		wsMsg    []byte
-		msgType  int
-		wsConn   *websocket.Conn
-		clientID string
+		err       error
+		wsMsgData []byte
+		wsConn    *websocket.Conn
 	)
-	clientID = fmt.Sprintf("%s", time.Unix)
+	clientID := fmt.Sprintf("%s", time.Now())
 	upgrader := &websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
@@ -37,17 +39,38 @@ func handleWs(w http.ResponseWriter, r *http.Request) {
 	defer wsConn.Close()
 	wsClient := GClientMgr.BuildClient(clientID, wsConn)
 	//客户端上线
+	fmt.Println("客户端上线:", clientID)
 	GClientMgr.PushClientEvent(GClientMgr.BuildClientEvent(wsClient, common.ClientEventOnlineType))
 	for {
 		//监听消息
-		if msgType, wsMsg, err = wsConn.ReadMessage(); err != nil {
-			//连接关闭 下线
+		if _, wsMsgData, err = wsConn.ReadMessage(); err != nil {
+			//下线
 			fmt.Println("读取错误:连接关闭")
 			GClientMgr.PushClientEvent(GClientMgr.BuildClientEvent(wsClient, common.ClientEventOfflineType))
 			return
 		}
-		//消息处理
-		GMsgMgr.PushMsg(clientID, wsMsg)
+		GMsgMgr.HandleMsg(clientID, wsMsgData)
 	}
 
+}
+
+func handleWechat(w http.ResponseWriter, r *http.Request) {
+	//接收到微信的请求后 将数据放入管道 向本地转发
+	r.ParseForm()
+	appID := r.Form["APPID"][0]
+	request := &common.WechatRequest{
+		ID:    appID + fmt.Sprintf("%s", time.Now().Unix()),
+		AppID: appID,
+		Data:  "AAAAAA",
+	}
+	responseChan := make(chan *common.LocalResponse)
+	//转发至本地
+	GWechatProxy.ToLocal(request, responseChan)
+	//监听结果
+	select {
+	case response := <-responseChan:
+		w.Write([]byte(response.Data))
+	case <-time.Tick(3 * time.Second):
+		w.Write([]byte("success"))
+	}
 }
