@@ -2,43 +2,44 @@ package main
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/gorilla/websocket"
+	"github.com/wowoniu/go_wechat_proxy/client"
+	"github.com/wowoniu/go_wechat_proxy/common"
 )
 
 var (
 	wsConn *websocket.Conn
 )
 
-func init() {
-
-}
-
 func main() {
-	var err error
+	var (
+		err               error
+		clientClosedChan  = make(chan bool)
+		workerClosedChan  = make(chan bool)
+		proxyResponseChan = make(chan *common.LocalResponse, 1000)
+	)
+	//建立websocket连接
 	if wsConn, _, err = websocket.DefaultDialer.Dial("ws://127.0.0.1:8082/ws", nil); err != nil {
 		fmt.Println("连接失败")
 		return
 	}
-
 	defer wsConn.Close()
-	//监听消息
-	go func() {
-		for {
-			if _, msgData, err := wsConn.ReadMessage(); err != nil {
-				fmt.Println("消息读取错误")
-				return
-			} else {
-				fmt.Println("收到消息:", string(msgData))
-			}
 
-		}
-	}()
-	for {
-		select {
-		case <-time.Tick(time.Second):
-			wsConn.WriteMessage(websocket.TextMessage, []byte("你好啊"))
-		}
+	//协程 监听消息
+	go client.GMsgMgr.Listen(wsConn, clientClosedChan, proxyResponseChan)
+
+	//协程 监听本地结果
+	go client.GWechatProxy.WatchLocalResponse(wsConn, proxyResponseChan, clientClosedChan, workerClosedChan)
+
+	select {
+	case <-workerClosedChan:
+		//断开后 重连
+		fmt.Println("连接断开")
+		wsConn.Close()
 	}
+}
+
+func init() {
+	client.LoadWechatProxy()
+	client.LoadMsgMgr()
 }

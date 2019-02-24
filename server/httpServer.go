@@ -14,6 +14,7 @@ import (
 func Start() {
 	//微信请求监听
 	http.HandleFunc("/wechat/proxy", handleWechat)
+	http.HandleFunc("/wechat/proxymock", handleWechatLocalMock)
 	//websocket
 	http.HandleFunc("/ws", handleWs)
 	http.Handle("/", http.FileServer(http.Dir("./webroot")))
@@ -84,4 +85,11 @@ func handleWechat(w http.ResponseWriter, r *http.Request) {
 	case <-time.Tick(3 * time.Second):
 		w.Write([]byte("success"))
 	}
+}
+
+func handleWechatLocalMock(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	requestBody, _ := ioutil.ReadAll(r.Body)
+	getParams := common.HttpGetParamsString(r)
+	w.Write([]byte("GET:" + getParams + "<br/>XML:" + string(requestBody)))
 }
