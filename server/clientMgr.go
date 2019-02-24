@@ -24,7 +24,7 @@ type ClientMgr struct {
 var GClientMgr *ClientMgr
 
 //NewClientMgr 返回客户端管理器单例
-func NewClientMgr() *ClientMgr {
+func LoadClientMgr() *ClientMgr {
 	if GClientMgr != nil {
 		return GClientMgr
 	}
@@ -106,7 +106,7 @@ func (c *ClientMgr) Heartbeat() {
 func (c *ClientMgr) BuildHeartbeatPackage() (msg []byte, err error) {
 	data := common.WsMessage{
 		Method: common.WsMethodHeartbeat,
-		Body:   &common.WsMessageData{},
+		Body:   &common.WsMessageBody{},
 	}
 	//JSON序列化
 	if msg, err = json.Marshal(data); err != nil {

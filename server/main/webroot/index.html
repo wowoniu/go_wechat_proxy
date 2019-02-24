@@ -17,33 +17,80 @@
 
 <script>
 
-var ws=new WebSocket("ws://127.0.0.1:8082/ws");
-
-ws.onmessage=function(msgEvent){
-	console.log(msgEvent.data)
-}
-
-ws.onopen=function(event){
-	ws.send(buildMessage("123456789","init"))
-}
-
-var sendMsg=function(msg){
-	return ws.send(msg)
-}
-
-function buildMessage(data,method,errCode,errMsg){
-    method=method?method:"localResponse";
-	var data={
-	    "method":method,
-		"body":{
-	        "err_code":errCode,
-			"err_msg":errMsg,
-			"data":data
+	var WechatProxy=function(){
+		this.conn=null;
+		this.appId="123456789";
+		this.const={
+		    METHOD_MESSAGE:"message",
+			METHOD_INIT:"init",
+			METHOD_LOCAL_RESPONSE:"localResponse",
+			METHOD_WECHAT_REQUEST:"wechatRequest"
 		}
 	}
-	return JSON.stringify(data)
-}
+	WechatProxy.prototype={
+	    init:function () {
+	        var context=this;
+            context.conn=new WebSocket("ws://127.0.0.1:8082/ws");
+            context.conn.onopen=function(event){
+                context._send(
+                    context._buildMessage(context.appId,context.const.METHOD_INIT)
+				)
+				context.bindEvent()
+			}
+        },
+		bindEvent:function(){
+			this._onClose();
+			this._onMessage();
+		},
+		_onClose:function(){
+	        this.conn.onclose=function () {
+				
+            }
+		},
+		_onMessage:function(){
+	        var context=this;
+            context.conn.onmessage=function(msgEvent){
+	            var response=context._parseMessage(msgEvent.data);
+	            var data=response.body.data;
+	            console.log(data)
+				context._send(context._buildMessage({
+					"id":data.id,
+					"app_id":context.appId,
+					"response":data.xml_data,
+				},context.const.METHOD_LOCAL_RESPONSE))
+			}
+		},
+        _buildMessage:function (data,method,errCode,errMsg){
+			method=method?method:"localResponse";
+			var data={
+				"method":method,
+				"body":{
+					"err_code":errCode,
+					"err_msg":errMsg,
+					"data":data
+				}
+			}
+			return JSON.stringify(data)
+		},
+		_parseMessage:function(data){
+	        try{
+				return JSON.parse(data);
+			}catch(e){
+	            return false;
+			}
+		},
+		_send:function(msg){
+			this.conn.send(msg);
+		},
 
+		_proxy:function(){
+
+		},
+	}
+
+	$(function(){
+	    new WechatProxy().init();
+	});
 </script>
 
 </html>

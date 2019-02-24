@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -58,10 +59,20 @@ func handleWechat(w http.ResponseWriter, r *http.Request) {
 	//接收到微信的请求后 将数据放入管道 向本地转发
 	r.ParseForm()
 	appID := r.Form["APPID"][0]
+	//判断是否是初次服务器验证 暂不做验证 TODO
+	if _, isExisted := r.Form["echostr"]; isExisted {
+		echostr := r.Form["echostr"][0]
+		w.Write([]byte(echostr))
+		return
+	}
+	//其他响应解析并转发
+	requestBody, _ := ioutil.ReadAll(r.Body)
+	xmlData := string(requestBody)
 	request := &common.WechatRequest{
-		ID:    appID + fmt.Sprintf("%s", time.Now().Unix()),
-		AppID: appID,
-		Data:  "AAAAAA",
+		ID:        fmt.Sprintf("%s%d", appID, time.Now().Unix()),
+		AppID:     appID,
+		GetParams: common.HttpGetParamsString(r),
+		XmlData:   xmlData,
 	}
 	responseChan := make(chan *common.LocalResponse)
 	//转发至本地
@@ -69,7 +80,7 @@ func handleWechat(w http.ResponseWriter, r *http.Request) {
 	//监听结果
 	select {
 	case response := <-responseChan:
-		w.Write([]byte(response.Data))
+		w.Write([]byte(response.Response))
 	case <-time.Tick(3 * time.Second):
 		w.Write([]byte("success"))
 	}

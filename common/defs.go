@@ -25,10 +25,10 @@ type ClientEvent struct {
 //WsMessage 通信的消息体
 type WsMessage struct {
 	Method string         `json:"method"` //指令
-	Body   *WsMessageData `json:"body"`   //消息体
+	Body   *WsMessageBody `json:"body"`   //消息体
 }
 
-type WsMessageData struct {
+type WsMessageBody struct {
 	ErrorCode string      `json:"err_code"`
 	ErrorMsg  string      `json:"error_msg"`
 	Data      interface{} `json:"data"`
@@ -46,11 +46,11 @@ type WechatRequest struct {
 	AppID      string `json:"app_id"`
 	GetParams  string `json:"get_params"`
 	PostParams string `json:"post_params"`
-	Data       string `json:"xml_data"`
+	XmlData    string `json:"xml_data"`
 }
 
 type LocalResponse struct {
-	ID    string `json:"id"`
-	AppID string `json:"app_id"`
-	Data  string `json:"data"`
+	ID       string `json:"id"`
+	AppID    string `json:"app_id"`
+	Response string `json:"response"`
 }

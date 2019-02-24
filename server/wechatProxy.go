@@ -14,7 +14,7 @@ type WechatProxy struct {
 
 var GWechatProxy *WechatProxy
 
-func NewWechatProxy() *WechatProxy {
+func LoadWechatProxy() *WechatProxy {
 	if GWechatProxy == nil {
 		GWechatProxy = &WechatProxy{
 			RequestChan:  make(chan *common.WechatRequest, 1000),

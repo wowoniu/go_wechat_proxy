@@ -9,7 +9,7 @@ func main() {
 }
 
 func init() {
-	server.NewClientMgr()
-	server.NewMsgMgr()
-	server.NewWechatProxy()
+	server.LoadClientMgr()
+	server.LoadMsgMgr()
+	server.LoadWechatProxy()
 }

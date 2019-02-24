@@ -16,8 +16,8 @@ type MsgMgr struct {
 
 var GMsgMgr *MsgMgr
 
-//NewMsgMgr 创建消息管理器单例
-func NewMsgMgr() *MsgMgr {
+//LoadMsgMgr 创建消息管理器单例
+func LoadMsgMgr() *MsgMgr {
 	if GMsgMgr == nil {
 		GMsgMgr = &MsgMgr{
 			MessageChan: make(chan []byte, 1000),
@@ -49,9 +49,20 @@ func (c *MsgMgr) HandleMsg(clientID string, message []byte) {
 		switch wsMessage.Method {
 		case common.WsMethodLocalResponse:
 			//本地机器响应
-			localResponseStr := wsMessage.Body.Data.(string)
+			var localResponseJsonStr []byte
+			if localResponseJsonStr, err = json.Marshal(wsMessage.Body.Data); err != nil {
+				//无效的响应数据体
+				response, _ := c.BuildMsg(common.WsMethodMessage, common.ErrorInvalidMessage)
+				GClientMgr.Send(clientID, response)
+				return
+			}
+			//格式解析
 			localResponse := &common.LocalResponse{}
-			json.Unmarshal([]byte(localResponseStr), localResponse)
+			if err = json.Unmarshal(localResponseJsonStr, localResponse); err != nil {
+				response, _ := c.BuildMsg(common.WsMethodMessage, common.ErrorInvalidMessage)
+				GClientMgr.Send(clientID, response)
+				return
+			}
 			GWechatProxy.ToWechat(localResponse)
 		case common.WsMethodInit:
 			//初始化连接
@@ -72,7 +83,7 @@ func (c *MsgMgr) ParseMsg(message []byte) (wsMsg *common.WsMessage, err error) {
 func (c *MsgMgr) BuildMsg(method string, data interface{}) (msg []byte, err error) {
 	wsMsg := &common.WsMessage{
 		Method: method,
-		Body: &common.WsMessageData{
+		Body: &common.WsMessageBody{
 			ErrorCode: "",
 			ErrorMsg:  "",
 			Data:      data,
