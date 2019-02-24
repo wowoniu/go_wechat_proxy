@@ -99,11 +99,11 @@ func handleQywechat(w http.ResponseWriter, r *http.Request) {
 	appID := r.Form["APPID"][0]
 
 	token := r.Form["_token"][0]
-	receiver_id := "wx5823bf96d3bd56c7"
+	corp_id := r.Form["_corpid"][0]
 	encoding_aeskey := r.Form["_aeskey"][0]
-	wxcpt := common.NewWXBizMsgCrypt(token, encoding_aeskey, receiver_id, common.XmlType)
+	wxcpt := common.NewWXBizMsgCrypt(token, encoding_aeskey, corp_id, common.XmlType)
 
-	//判断是否是初次服务器验证 暂不做验证 TODO
+	//判断是否是初次服务器验证
 	if _, isExisted := r.Form["echostr"]; isExisted {
 		//第一次握手 加解密
 		//* GET /cgi-bin/wxpush?msg_signature=5c45ff5e21c57e6ad56bac8758b79b1d9ac89fd3&timestamp=1409659589&nonce=263014780&echostr=P9nAzCzyDtyTWESHep1vC5X9xho%2FqYX3Zpb4yKa9SKld1DsH3Iyt3tP3zNdtp%2B4RPcs8TgAE7OaBO%2BFZXvnaqQ%3D%3D
