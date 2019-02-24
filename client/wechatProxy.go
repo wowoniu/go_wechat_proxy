@@ -53,7 +53,7 @@ func (c *WechatProxy) ToLocal(wechatRequest *common.WechatRequest, resultChan ch
 		err           error
 		url           string
 	)
-	url = "http://localhost:8082/wechat/proxymock?" + wechatRequest.GetParams
+	url = GConfig.LocalUrl + "?" + wechatRequest.GetParams
 	if request, err = http.NewRequest("post", url, strings.NewReader(wechatRequest.XmlData)); err != nil {
 		fmt.Println("无效的本地转发请求:", err)
 		return
