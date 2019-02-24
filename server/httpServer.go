@@ -14,6 +14,8 @@ import (
 func Start() {
 	//微信请求监听
 	http.HandleFunc("/wechat/proxy", handleWechat)
+	//企业微信请求监听
+	http.HandleFunc("/qywechat/proxy", handleQywechat)
 	http.HandleFunc("/wechat/proxymock", handleWechatLocalMock)
 	//websocket
 	http.HandleFunc("/ws", handleWs)
@@ -58,6 +60,7 @@ func handleWs(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//处理微信公众号的异步消息
 func handleWechat(w http.ResponseWriter, r *http.Request) {
 	//接收到微信的请求后 将数据放入管道 向本地转发
 	r.ParseForm()
@@ -66,6 +69,53 @@ func handleWechat(w http.ResponseWriter, r *http.Request) {
 	if _, isExisted := r.Form["echostr"]; isExisted {
 		echostr := r.Form["echostr"][0]
 		w.Write([]byte(echostr))
+		return
+	}
+	//其他响应解析并转发
+	requestBody, _ := ioutil.ReadAll(r.Body)
+	xmlData := string(requestBody)
+	request := &common.WechatRequest{
+		ID:        fmt.Sprintf("%s%d", appID, time.Now().Unix()),
+		AppID:     appID,
+		GetParams: common.HttpGetParamsString(r),
+		XmlData:   xmlData,
+	}
+	responseChan := make(chan *common.LocalResponse)
+	//转发至本地
+	GWechatProxy.ToLocal(request, responseChan)
+	//监听结果
+	select {
+	case response := <-responseChan:
+		w.Write([]byte(response.Response))
+	case <-time.Tick(3 * time.Second):
+		w.Write([]byte("success"))
+	}
+}
+
+//处理企业微信的异步消息
+func handleQywechat(w http.ResponseWriter, r *http.Request) {
+	//接收到微信的请求后 将数据放入管道 向本地转发
+	r.ParseForm()
+	appID := r.Form["APPID"][0]
+
+	token := r.Form["_token"][0]
+	receiver_id := "wx5823bf96d3bd56c7"
+	encoding_aeskey := r.Form["_aeskey"][0]
+	wxcpt := common.NewWXBizMsgCrypt(token, encoding_aeskey, receiver_id, common.XmlType)
+
+	//判断是否是初次服务器验证 暂不做验证 TODO
+	if _, isExisted := r.Form["echostr"]; isExisted {
+		//第一次握手 加解密
+		//* GET /cgi-bin/wxpush?msg_signature=5c45ff5e21c57e6ad56bac8758b79b1d9ac89fd3&timestamp=1409659589&nonce=263014780&echostr=P9nAzCzyDtyTWESHep1vC5X9xho%2FqYX3Zpb4yKa9SKld1DsH3Iyt3tP3zNdtp%2B4RPcs8TgAE7OaBO%2BFZXvnaqQ%3D%3D
+		echoStr := r.Form["echostr"][0]
+		msgSig := r.Form["msg_signature"][0]
+		timeStamp := r.Form["timestamp"][0]
+		nonce := r.Form["nonce"][0]
+		echostr, crypt_err := wxcpt.VerifyURL(msgSig, timeStamp, nonce, echoStr)
+		if nil != crypt_err {
+			fmt.Println("verifyurl fail", crypt_err)
+		}
+		w.Write(echostr)
 		return
 	}
 	//其他响应解析并转发
