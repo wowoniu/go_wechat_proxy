@@ -22,3 +22,16 @@ bin目录下有已经编译好的服务端和客户端可执行文件(其他操�
    + linux(64)
      + 启动客户端： ./client_linux_64_linux -appid 微信公众号APPID -local_url http://本地微信服务应用URL -remote_ws_url ws://公网部署IP:80/ws
    +  win(64)如上
+   
+   
+#### 代理服务端快速推荐部署方式
+    没有公网服务器的情况下 建议使用daocloud(https://www.daocloud.io/)的免费胶囊Ubuntu主机(每次申请可免费使用两个小时) 
+    使用SSH登陆到胶囊主机后 下载服务端发行版本 运行服务 
+    
+    wget https://github.com/wowoniu/go_wechat_proxy/releases/download/v1.0/server_linux_64_linux 
+    chmod +x server_linux_64_linux
+    sudo ./server_linux_64_linux
+    
+    
+#### <a href="https://github.com/wowoniu/go_wechat_proxy/releases" target="_blank">下载地址</a>
+    
