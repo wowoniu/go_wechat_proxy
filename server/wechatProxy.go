@@ -7,9 +7,9 @@ import (
 
 //微信转发逻辑处理
 type WechatProxy struct {
-	RequestChan  chan *common.WechatRequest //微信服务器的请求
-	ResponseChan chan *common.LocalResponse //本地机器的响应
-	ProxyTable   map[string]*common.ProxyRecord
+	RequestChan  chan *common.WechatRequest     //微信服务器的请求
+	ResponseChan chan *common.LocalResponse     //本地机器的响应
+	ProxyTable   map[string]*common.ProxyRecord //待转发的请求记录
 }
 
 var GWechatProxy *WechatProxy
@@ -38,6 +38,9 @@ func (c *WechatProxy) ToLocal(r *common.WechatRequest, responseChan chan *common
 
 func (c *WechatProxy) ToWechat(r *common.LocalResponse) {
 	if proxyRecord, isExisted := c.ProxyTable[r.ID]; isExisted {
+		//请求已完成 删除本次请求记录
+		delete(c.ProxyTable, r.ID)
+		//写入结果
 		proxyRecord.ResponseChan <- r
 	}
 }
