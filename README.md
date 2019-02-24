@@ -41,6 +41,7 @@ bin目录下有已经编译好的服务端和客户端可执行文件(其他操�
 + 服务器地址：http://代理服务器地址/qywechat/proxy?APPID=企业号CROP_ID+应用ID&_corp_id=企业ID&_token=企业号TOKEN&_aeskey=加解密KEY  
 + 参数的说明:
    + APPID:由于企业微信号可以有多个应用 所以此处APPID使用企业号ID+应用ID 来作为唯一转发标识
+   
    【【【【【客户端启动时 APPID应以此值一致】】】】】
    + _corp_id:企业ID
    + _token:企业号配置的token
