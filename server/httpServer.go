@@ -18,7 +18,7 @@ func Start() {
 	//websocket
 	http.HandleFunc("/ws", handleWs)
 	http.Handle("/", http.FileServer(http.Dir("./webroot")))
-	http.ListenAndServe("0.0.0.0:8082", nil)
+	http.ListenAndServe("0.0.0.0:"+GConfig.Port, nil)
 }
 
 func handleWs(w http.ResponseWriter, r *http.Request) {
