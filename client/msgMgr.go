@@ -19,13 +19,13 @@ func LoadMsgMgr() *MsgMgr {
 	return GMsgMgr
 }
 
-func (c *MsgMgr) Listen(wsConn *websocket.Conn, isClosedChan chan bool, proxyResponseChan chan *common.LocalResponse) {
+func (c *MsgMgr) Listen(wsConn *websocket.Conn, appId string, isClosedChan chan bool, proxyResponseChan chan *common.LocalResponse) {
 	var (
 		msgData []byte
 		err     error
 	)
 	//连接初始化
-	initResponse, _ := c.BuildWsResponse(common.WsMethodInit, "123456789")
+	initResponse, _ := c.BuildWsResponse(common.WsMethodInit, appId)
 	if err = wsConn.WriteMessage(websocket.TextMessage, initResponse); err != nil {
 		wsConn.Close()
 		isClosedChan <- true
