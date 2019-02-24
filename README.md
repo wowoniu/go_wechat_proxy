@@ -36,7 +36,7 @@ bin目录下有已经编译好的服务端和客户端可执行文件(其他操�
 #### <a href="https://github.com/wowoniu/go_wechat_proxy/releases" target="_blank">下载地址</a>
     
     
-##企业微信使用说明
+# 企业微信使用说明
 ### 服务器地址配置说明：
 + 服务器地址：http://代理服务器地址/qywechat/proxy?APPID=企业号CROP_ID+应用ID&_corp_id=企业ID&_token=企业号TOKEN&_aeskey=加解密KEY  
 + 参数的说明:
