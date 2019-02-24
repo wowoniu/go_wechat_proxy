@@ -18,7 +18,9 @@ func Start() {
 	//websocket
 	http.HandleFunc("/ws", handleWs)
 	http.Handle("/", http.FileServer(http.Dir("./webroot")))
-	http.ListenAndServe("0.0.0.0:"+GConfig.Port, nil)
+	if err := http.ListenAndServe("0.0.0.0:"+GConfig.Port, nil); err != nil {
+		fmt.Println("服务器启动异常:", err)
+	}
 }
 
 func handleWs(w http.ResponseWriter, r *http.Request) {
