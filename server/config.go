@@ -22,10 +22,10 @@ func (c *Config) ParseParams() (err error) {
 	var (
 		port string
 	)
-	flag.StringVar(&port, "port", "8082", "服务监听端口 默认8082")
+	flag.StringVar(&port, "port", "80", "服务监听端口 默认80")
 	flag.Parse()
 	if port == "" {
-		return errors.New("缺少启动参数: -port 8082")
+		return errors.New("缺少启动参数: -port 80")
 	}
 	c.Port = port
 	return
