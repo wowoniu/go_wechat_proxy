@@ -20,5 +20,5 @@ bin目录下有已经编译好的服务端和客户端可执行文件(其他操�
   
 + 本地开发机器运行客户端软件接收公网的转发请求
    + linux(64)
-     + 启动客户端： ./client_linux_64_linux -appid 123456789 -local_url http://本地微信服务应用URL -remote_ws_url ws://公网部署IP:8082/ws
+     + 启动客户端： ./client_linux_64_linux -appid 微信公众号APPID -local_url http://本地微信服务应用URL -remote_ws_url ws://公网部署IP:8082/ws
    +  win(64)如上
