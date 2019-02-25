@@ -20,8 +20,9 @@ func Start() {
 	//websocket
 	http.HandleFunc("/ws", handleWs)
 	http.Handle("/", http.FileServer(http.Dir("./webroot")))
+	common.Log(common.LogLevelInfo, "服务启动", "监听端口:"+GConfig.Port)
 	if err := http.ListenAndServe("0.0.0.0:"+GConfig.Port, nil); err != nil {
-		fmt.Println("服务器启动异常:", err)
+		common.Log(common.LogLevelError, "服务器启动异常:", err)
 	}
 }
 

@@ -21,4 +21,13 @@ const (
 
 	//ClientEventOfflineType 客户端事件类型:下线
 	ClientEventOfflineType = "2"
+
+	//LogLevelDebug 日志级别
+	LogLevelDebug = "DEBUG"
+
+	LogLevelInfo = "INFO"
+
+	LogLevelWarn = "WARN"
+
+	LogLevelError = "ERROR"
 )
