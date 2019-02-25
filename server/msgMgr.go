@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/wowoniu/go_wechat_proxy/common"
 )
 
@@ -40,7 +39,7 @@ func (c *MsgMgr) HandleMsg(clientID string, message []byte) {
 		)
 		//解析请求数据
 		if wsMessage, err = c.ParseMsg(message); err != nil {
-			fmt.Println("无效的消息:", err)
+			common.Log(common.LogLevelInfo, "无效的消息:", err)
 			response, _ := c.BuildMsg(common.WsMethodMessage, common.ErrorInvalidMessage)
 			GClientMgr.Send(clientID, response)
 			return
@@ -67,7 +66,7 @@ func (c *MsgMgr) HandleMsg(clientID string, message []byte) {
 		case common.WsMethodInit:
 			//初始化连接
 			AppID := wsMessage.Body.Data.(string)
-			fmt.Println("用户上线:", clientID, "-", AppID)
+			common.Log(common.LogLevelInfo, "用户上线:", clientID, "-", AppID)
 			GClientMgr.SetUserKey(clientID, AppID)
 		}
 	}()

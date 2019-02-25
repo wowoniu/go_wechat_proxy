@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/wowoniu/go_wechat_proxy/common"
@@ -63,7 +62,7 @@ func (c *ClientMgr) HandleEvent(clientEvent *common.ClientEvent) {
 	case common.ClientEventOfflineType:
 		if client, isExisted := c.ActivityTable[clientEvent.ClientKey]; isExisted {
 			client.Conn.Close()
-			fmt.Println("客户端下线:", client.ClientKey, "-", client.UserKey)
+			common.Log(common.LogLevelInfo, "客户端下线:", client.ClientKey, "-", client.UserKey)
 			delete(c.ActivityTable, clientEvent.ClientKey)
 		}
 	}
@@ -84,7 +83,7 @@ func (c *ClientMgr) Heartbeat() {
 		for {
 			select {
 			case <-time.Tick(5 * time.Second):
-				fmt.Println("客户端数量:", len(c.ActivityTable))
+				common.Log(common.LogLevelInfo, "客户端数量:", len(c.ActivityTable))
 				for _, client := range c.ActivityTable {
 					if msg, err = c.BuildHeartbeatPackage(); err == nil {
 						//fmt.Println("发送心跳:",string(msg))
@@ -93,7 +92,7 @@ func (c *ClientMgr) Heartbeat() {
 							c.PushClientEvent(c.BuildClientEvent(client, common.ClientEventOfflineType))
 						}
 					} else {
-						fmt.Println("心跳包构造失败:", err)
+						common.Log(common.LogLevelInfo, "心跳包构造失败:", err)
 					}
 				}
 			}

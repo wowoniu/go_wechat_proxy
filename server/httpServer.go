@@ -46,13 +46,13 @@ func handleWs(w http.ResponseWriter, r *http.Request) {
 	defer wsConn.Close()
 	wsClient := GClientMgr.BuildClient(clientID, wsConn)
 	//客户端上线
-	fmt.Println("客户端上线:", clientID)
+	common.Log(common.LogLevelInfo, "客户端上线:", clientID)
 	GClientMgr.PushClientEvent(GClientMgr.BuildClientEvent(wsClient, common.ClientEventOnlineType))
 	for {
 		//监听消息
 		if _, wsMsgData, err = wsConn.ReadMessage(); err != nil {
 			//下线
-			fmt.Println("读取错误:连接关闭")
+			common.Log(common.LogLevelInfo, "读取错误:连接关闭")
 			GClientMgr.PushClientEvent(GClientMgr.BuildClientEvent(wsClient, common.ClientEventOfflineType))
 			return
 		}
@@ -81,6 +81,7 @@ func handleWechat(w http.ResponseWriter, r *http.Request) {
 		GetParams: common.HttpGetParamsString(r),
 		XmlData:   xmlData,
 	}
+	common.Log(common.LogLevelDebug, "转发请求:(get)", request.GetParams, " (xml)", request.XmlData)
 	responseChan := make(chan *common.LocalResponse)
 	//转发至本地
 	GWechatProxy.ToLocal(request, responseChan)

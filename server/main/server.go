@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"github.com/wowoniu/go_wechat_proxy/common"
 	"github.com/wowoniu/go_wechat_proxy/server"
 )
 
 func main() {
 	if err := server.GConfig.ParseParams(); err != nil {
-		fmt.Println(err)
+		common.Log(common.LogLevelError, err)
 		return
 	}
 	server.Start()
