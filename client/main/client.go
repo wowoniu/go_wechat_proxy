@@ -24,7 +24,7 @@ func main() {
 	}
 	//建立websocket连接
 	if wsConn, _, err = websocket.DefaultDialer.Dial(client.GConfig.RemoteWsUrl, nil); err != nil {
-		fmt.Println("连接失败", err)
+		common.Log(common.LogLevelError, "连接失败", err)
 		return
 	}
 	defer wsConn.Close()
@@ -38,7 +38,7 @@ func main() {
 	select {
 	case <-workerClosedChan:
 		//断开后 重连
-		fmt.Println("连接断开")
+		common.Log(common.LogLevelError, "连接断开")
 		wsConn.Close()
 	}
 }

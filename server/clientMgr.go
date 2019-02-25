@@ -150,7 +150,7 @@ func (c *ClientMgr) Send(userKey string, wsMsg []byte) (err error) {
 	//获取客户端连接
 	if wsClient, err = GClientMgr.GetClient(userKey); err != nil {
 		//客户端已下线
-		//fmt.Println("获取客户端失败")
+		common.Log(common.LogLevelError, "客户端已下线")
 		return
 	}
 	err = wsClient.Conn.WriteMessage(websocket.TextMessage, wsMsg)

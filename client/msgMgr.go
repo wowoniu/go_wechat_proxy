@@ -2,7 +2,6 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/wowoniu/go_wechat_proxy/common"
 )
@@ -40,7 +39,7 @@ func (c *MsgMgr) Listen(wsConn *websocket.Conn, isClosedChan chan bool, proxyRes
 		//解析消息
 		wsMsg := &common.WsMessage{}
 		if err = json.Unmarshal(msgData, wsMsg); err != nil {
-			fmt.Println("ws消息解析错误:", err)
+			common.Log(common.LogLevelError, "ws消息解析错误:", err)
 			return
 		}
 		//开启协程 处理本地消息及转发
@@ -63,14 +62,14 @@ func (c *MsgMgr) HandleMsg(wsMsg *common.WsMessage, resultChan chan *common.Loca
 		var err error
 		var wechatRequest = &common.WechatRequest{}
 		if jsonStr, err = json.Marshal(wsMsg.Body.Data); err != nil {
-			fmt.Println("错误的微信转发消息体格式:", err)
+			common.Log(common.LogLevelError, "错误的微信转发消息体格式:", err)
 			return
 		}
 		if err = json.Unmarshal(jsonStr, wechatRequest); err != nil {
-			fmt.Println("错误的微信转发消息体格式:", err)
+			common.Log(common.LogLevelError, "错误的微信转发消息体格式:", err)
 			return
 		}
-		fmt.Println("转发请求:", wechatRequest.XmlData)
+		common.Log(common.LogLevelInfo, "转发请求:", wechatRequest.XmlData)
 		//本地转发
 		GWechatProxy.ToLocal(wechatRequest, resultChan)
 	}
