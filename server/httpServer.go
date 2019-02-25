@@ -90,6 +90,7 @@ func handleWechat(w http.ResponseWriter, r *http.Request) {
 	case response := <-responseChan:
 		w.Write([]byte(response.Response))
 	case <-time.Tick(3 * time.Second):
+		common.Log(common.LogLevelInfo, "客户端转发响应超时")
 		w.Write([]byte("success"))
 	}
 }
@@ -137,6 +138,7 @@ func handleQywechat(w http.ResponseWriter, r *http.Request) {
 	case response := <-responseChan:
 		w.Write([]byte(response.Response))
 	case <-time.Tick(3 * time.Second):
+		common.Log(common.LogLevelInfo, "客户端转发响应超时")
 		w.Write([]byte("success"))
 	}
 }
