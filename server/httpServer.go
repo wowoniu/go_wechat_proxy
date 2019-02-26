@@ -73,7 +73,10 @@ func handleWechat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//其他响应解析并转发
-	requestBody, _ := ioutil.ReadAll(r.Body)
+	requestBody, err := ioutil.ReadAll(r.Body)
+	if err == nil {
+		defer r.Body.Close()
+	}
 	xmlData := string(requestBody)
 	request := &common.WechatRequest{
 		ID:        fmt.Sprintf("%s%d", appID, time.Now().Unix()),
@@ -122,7 +125,10 @@ func handleQywechat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//其他响应解析并转发
-	requestBody, _ := ioutil.ReadAll(r.Body)
+	requestBody, err := ioutil.ReadAll(r.Body)
+	if err == nil {
+		defer r.Body.Close()
+	}
 	xmlData := string(requestBody)
 	request := &common.WechatRequest{
 		ID:        fmt.Sprintf("%s%d", appID, time.Now().Unix()),

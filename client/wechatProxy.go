@@ -64,6 +64,7 @@ func (c *WechatProxy) ToLocal(wechatRequest *common.WechatRequest, resultChan ch
 		common.Log(common.LogLevelError, "本地请求失败:", err)
 		return
 	}
+	defer response.Body.Close()
 
 	if localResponse, err = ioutil.ReadAll(response.Body); err != nil {
 		common.Log(common.LogLevelError, "本地响应解析失败:", err)
